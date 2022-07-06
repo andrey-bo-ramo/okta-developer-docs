@@ -6,9 +6,9 @@ import {
   guides,
   languagesSdk,
   reference,
-  releaseNotes
+  releaseNotes,
 } from "../const/navbar.const";
-      
+
 export default {
   data() {
     return {
@@ -25,19 +25,37 @@ export default {
         ..._.cloneDeep(concepts),
         ..._.cloneDeep(reference),
         ..._.cloneDeep(languagesSdk),
-        ..._.cloneDeep(releaseNotes)
+        ..._.cloneDeep(releaseNotes),
       ];
     },
     getNavigationData() {
-      this.navigation = this.getNavigation().map(nav => {
-        this.addStatesToLink(nav);     
+      this.navigation = this.getNavigation().map((nav) => {
+        this.addStatesToLink(nav);
         return nav;
       });
-      return this.navigation
+      return this.navigation;
     },
-    addStatesToLink(link) {
+
+    sanitizeTitle(el) {
+      if (el.guideName) {
+        return el.guideName;
+      }
+      return el.title.toLowerCase().replace(/ /gi, "-").replace(/\//gi, "-");
+    },
+
+    addStatesToLink(link, parent = null) {
       // Reset iHaveChildrenActive value.
       link.iHaveChildrenActive = false;
+
+      if (!link.path) {
+        link.path = parent.path + this.sanitizeTitle(link) + "/";
+        if (!link.guideName) {
+          link.path = parent.path.replace(
+            this.sanitizeTitle(parent),
+            this.sanitizeTitle(link)
+          );
+        }
+      }
 
       if (link.path) {
         // Add state to leaf link
@@ -47,9 +65,9 @@ export default {
         for (const subLink of link.subLinks) {
           // if link has active children - continue with the rest of its sublinks
           if (link.iHaveChildrenActive) {
-            this.addStatesToLink(subLink);
+            this.addStatesToLink(subLink, link);
           } else {
-            link.iHaveChildrenActive = this.addStatesToLink(subLink);
+            link.iHaveChildrenActive = this.addStatesToLink(subLink, link);
           }
         }
       }
@@ -61,7 +79,7 @@ export default {
       const guidesInfo = getGuidesInfo({ pages });
       let navs = _.cloneDeep(guides);
       const framework = guideFromPath(this.$route.path).framework;
-      navs.forEach(nav => {
+      navs.forEach((nav) => {
         let queue = new Array();
         queue.push(nav);
         let current = queue.pop();
@@ -78,12 +96,16 @@ export default {
 
               // Special value for guide that only has one section and should be
               // linked at the parent
-              if (guide.sections.length === 1 && firstSection.name === 'main') {
+              if (guide.sections.length === 1 && firstSection.name === "main") {
                 current.title = firstSection.title;
-                current.path = firstSection.makeLink(guide.frameworks.includes(framework) ? framework : guide.mainFramework);
+                current.path = firstSection.makeLink(
+                  guide.frameworks.includes(framework)
+                    ? framework
+                    : guide.mainFramework
+                );
                 current.frameworks = guide.frameworks;
               } else {
-                guide.sections.forEach(section => {
+                guide.sections.forEach((section) => {
                   current.subLinks.push({
                     title: section.title,
                     path: section.makeLink(
@@ -91,7 +113,7 @@ export default {
                         ? framework
                         : guide.mainFramework
                     ),
-                    frameworks: guide.frameworks
+                    frameworks: guide.frameworks,
                   });
                 });
               }
@@ -99,10 +121,9 @@ export default {
           }
           current = queue.pop();
         }
-
       });
       return navs;
-    }
-  }
-}
+    },
+  },
+};
 </script>

@@ -16,7 +16,7 @@
         <div
           :class="{
             'content--container': true,
-            'navigation-only': appContext.isTreeNavMobileOpen
+            'navigation-only': appContext.isTreeNavMobileOpen,
           }"
         >
           <Sidebar />
@@ -26,7 +26,7 @@
             <MobileOnThisPage />
             <PageTitle />
             <ContentPage />
-            <slot name="generatedContent" />
+            <GeneratedContent v-if="$page.frontmatter.generated" />
             <div class="edit-on-github">
               <span class="fa fa-github"></span>
               <span>
@@ -54,7 +54,7 @@
 
 <script>
 export const LAYOUT_CONSTANTS = {
-  HEADER_TO_CONTENT_GAP: 45 //px
+  HEADER_TO_CONTENT_GAP: 45, //px
 };
 const TABLET_BREAKPOINT = 767;
 
@@ -71,6 +71,7 @@ export default {
     PageTitle: () => import("../components/PageTitle.vue"),
     Breadcrumb: () => import("../components/Breadcrumb.vue"),
     ContentPage: () => import("../components/ContentPage.vue"),
+    GeneratedContent: () => import("../components/GeneratedContent.vue"),
     Footer: () => import("../components/Footer.vue"),
     Quickstart: () => import("../components/Quickstart.vue"),
     Pricing: () => import("../components/Pricing.vue"),
@@ -87,11 +88,11 @@ export default {
       appContext: {
         isTreeNavMobileOpen: false,
         isInMobileViewport: false,
-        treeNavDocs: []
+        treeNavDocs: [],
       },
       stackSelectorData: {
-        to: '',
-        from: ''
+        to: "",
+        from: "",
       },
     };
   },
@@ -101,11 +102,11 @@ export default {
       stackSelectorData: this.stackSelectorData,
     };
   },
-  mounted: function() {
-    import('../util/pendo');
+  mounted: function () {
+    import("../util/pendo");
     let that = this;
     that.appContext.treeNavDocs = this.getTreeNavDocs();
-    this.$on("toggle-tree-nav", event => {
+    this.$on("toggle-tree-nav", (event) => {
       that.appContext.isTreeNavMobileOpen = event.treeNavOpen;
     });
     this.onResize();
@@ -116,7 +117,7 @@ export default {
     $route(to, from) {
       this.appContext.isTreeNavMobileOpen = false;
       this.redirIfRequired();
-      
+
       // On route change check if base path has changed.
       // If true, re-render sidebar.
       // We want to check if it's a 'real' route change (re-render sidebar) or just a page scroll
@@ -125,9 +126,9 @@ export default {
         // Previously we tried to remove re-render logic but seems it
         // caused additional bugs (https://oktainc.atlassian.net/browse/OKTA-419090, https://oktainc.atlassian.net/browse/OKTA-419134)
         // See https://github.com/okta/okta-developer-docs/pull/2170 <-- PR that gets rid of re-render sidebar logic
-        this.appContext.treeNavDocs = this.getNavigationData();   
+        this.appContext.treeNavDocs = this.getNavigationData();
       }
-    }
+    },
   },
   computed: {
     editLink() {
@@ -139,7 +140,7 @@ export default {
         editLinks,
         docsDir = "",
         docsBranch = "master",
-        docsRepo = repo
+        docsRepo = repo,
       } = this.$site.themeConfig.editLink;
       if (docsRepo && editLinks && this.$page.relativePath) {
         return this.createEditLink(
@@ -153,7 +154,7 @@ export default {
     },
     editLinkText() {
       return this.$site.themeConfig.editLink.editLinkText || `Edit this page`;
-    }
+    },
   },
   methods: {
     redirIfRequired() {
@@ -181,13 +182,16 @@ export default {
       );
     },
     getTreeNavDocs() {
-      this.appContext.treeNavDocs = this.appContext.treeNavDocs.length > 0 ? this.appContext.treeNavDocs : this.getNavigationData();
+      this.appContext.treeNavDocs =
+        this.appContext.treeNavDocs.length > 0
+          ? this.appContext.treeNavDocs
+          : this.getNavigationData();
       return this.appContext.treeNavDocs;
     },
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize);
-  }
+  },
 };
 </script>
 
